@@ -1,0 +1,819 @@
+<html>
+
+  <head>
+      <meta name="twitter:card" content="photo">
+  <meta name="twitter:site" content="@cabbibo">
+  <meta name="twitter:creator" content="@cabbibo">
+  <meta name="twitter:url" content="http://cabbi.bo">
+  <meta name="twitter:title" content="Long Live Synesthesia">
+  <meta name="twitter:description" content="Long Live Synesthesia">
+  <meta name="twitter:creator" content="@cabbibo">
+  <meta name="twitter:image" content="http://cabbi.bo/image.png">
+  <meta name="twitter:image:width" content="1440">
+  <meta name="twitter:image:height" content="900">
+  <meta name="twitter:domain" content="cabbi.bo">
+  <meta itemprop="name" content="Cabbi.bo">
+  <meta itemprop="description" content="Long Live Synesthesia">
+  <meta itemprop="image" src="http://cabbi.bo/image.png">
+  <meta property="og:title" content="Cabbi.bo">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="http://cabbi.bo/image.png"/>
+  <meta property="og:site_name" content="Cabbi.bo">
+  <meta property="og:description" content="Long Live Synesthesia">
+
+
+  <style>
+
+    @font-face {
+      font-family: "GeoSans";
+      src: url("lib/GeosansLight.ttf");
+    }
+    html{ color:#fff; background:#26150F; font-family:"GeoSans" }
+
+    #container{
+      width      : 100%;
+      height     : 100%;
+      position   : absolute;
+      top        : 0px;
+      left       : 0px;
+      background : #000;
+    }
+
+    #stats{
+      position  : absolute;
+      bottom    : 0px;
+      right     : 0px;
+      z-index   : 999;
+    }
+
+    a{
+      color: #fff;
+      //position: absolute;
+     // z-index: 999;
+    }
+
+    #loading{
+
+      width:100%;
+      text-align:center;
+      padding-top:100px;
+      font-size:25px;
+
+    }
+
+    #GUI{
+
+      position:fixed;
+      top:0px;
+      right:0px;
+      z-index:999;
+      display:none;
+
+    }
+
+    h1{
+
+      margin:0px;
+      padding:10px;
+    }
+    #share{
+      position: absolute;
+      z-index: 99;
+      bottom: 0px;
+      left:70px;
+      font-size: 25px;
+      padding: 10px;
+    }
+
+
+    #tweet{
+
+      position: absolute;
+      z-index: 999;
+      bottom: 10px;
+      left: 10px;
+      font-size: 25px;
+      padding: 40px;
+
+      width:50px;
+      height:50px;
+      display: block;
+
+      background: none;
+      opacity:.6;
+      padding:5px;
+
+    }
+     #tweet:hover{
+
+      opacity: 1;
+
+    }
+
+    #tweet img{
+
+      width: 50px;
+      height: 50px;
+
+    }
+
+  </style>
+</head>
+<body>
+
+
+
+  <div id="share">
+  
+    <a href="https://soundcloud.com/lukeabbottmusic/luke-abbott-modern-driveway" target="_blank"> Modern Driveway - Luke Abbott </a><br/>
+    Press Space to Change Colors <br/>   
+
+  </div>
+
+  <a id="tweet" href="http://twitter.com/share?text=%23threejs%20%23webgl%20space%20speaker%20powered%20by%20@lukeabbottmusic%20(%20code:%20@cabbibo%20):%20&url=http://cabbibo.com/drive" target="_blank"><img src="tweet.png"/> </a><br/>
+
+  <div id="GUI"></div>
+<script src = "lib/underscore.js"             ></script>
+<script src = "lib/three.js"                  ></script>
+<script src = "lib/jquery.min.js"             ></script>
+<script src = "lib/stats.min.js"              ></script>
+<script src = "lib/TrackballControls.js"      ></script>
+<script src = "lib/ShaderLoader.js"           ></script>
+<script src = "lib/OBJLoader.js"              ></script>
+<script src = "lib/Stream.js"                 ></script>
+<script src = "lib/AudioController.js"        ></script>
+<script src = "lib/UserAudio.js"              ></script>
+<script src = "lib/AudioTexture.js"           ></script>
+<script src = "lib/dat.gui.min.js"            ></script>
+<script src = "lib/leap.min.js"               ></script>
+<script src = "lib/LeapTrackballControls.js"  ></script>
+<script src = "lib/GUI.js"                    ></script>
+<script src = "lib/SubdivisionModifier.js"    ></script>
+<script src = "lib/addSocialMedia.js"    ></script>
+
+<script>
+
+  console.log('Loading');
+
+  var container , camera, scene, renderer , stats;
+
+  var sceneSize = 5000;
+
+  var andersGeo;
+  var loaded = 0;
+  var neededToLoad = 2;
+
+  var clock = new THREE.Clock();
+
+  var audioController = new AudioController();
+
+// audioController.mute.gain.value = 0;
+
+ /*var userAudio = new UserAudio( audioController );
+ userAudio.onStreamCreated = function(){
+
+   onLoad();
+
+   console.log('HEKLKS');
+
+ }*/
+
+
+ var G = {
+
+   resolution: { type:"v2" , value: new THREE.Vector2( window.innerWidth , window.innerHeight ) },
+   t_audio : { type:"t" , value: audioController.texture },
+
+   
+    time:{ type:"f" , value:0 },
+    dT:{ type:"f" , value:0 },
+    lightPos:{type:"v3",value: new THREE.Vector3( 200 , 0 , 0 ) },
+
+        
+    tmp_boxOut:   { type:"color"  , value:                  0xF2B66D },
+    boxOut:       { type:"c"      , value: new THREE.Color( 0xF2B66D )},  
+
+    tmp_boxIn:    { type:"color"  , value:                  0xB0844F },
+    boxIn:        { type:"c"      , value: new THREE.Color( 0xB0844F )},  
+
+    tmp_coneOut:  { type:"color"  , value:                  0x059372 },
+    coneOut:      { type:"c"      , value: new THREE.Color( 0x059372 )},  
+
+    tmp_coneIn:   { type:"color"  , value:                  0x7ec7a0 },
+    coneIn:       { type:"c"      , value: new THREE.Color( 0x7ec7a0 )}, 
+
+    tmp_skullOut: { type:"color"  , value:                  0xBF533B },
+    skullOut:     { type:"c"      , value: new THREE.Color( 0xBF533B )},  
+
+    tmp_skullIn:  { type:"color"  , value:                  0xA84934 },
+    skullIn:      { type:"c"      , value: new THREE.Color( 0xA84934 )}, 
+
+    tmp_tetraIn:  { type:"color"  , value:                  0xc8b59a },
+    tetraIn:      { type:"c"      , value: new THREE.Color( 0xc8b59a )},  
+
+    tmp_tetraOut: { type:"color"  , value:                  0xc09380 },
+    tetraOut:     { type:"c"      , value: new THREE.Color( 0xc09380 )}, 
+
+    tmp_bg: { type:"color"  , value:                  0x281000 },
+    bg:     { type:"c"      , value: new THREE.Color( 0x281000 )},  
+
+
+  }
+
+   function assignColors( array ){
+
+     G.tmp_boxOut.value = array[0];
+     G.boxOut.value.setHex( array[0] );
+
+     G.tmp_boxIn.value = array[1];
+     G.boxIn.value.setHex( array[1] );
+
+     G.tmp_coneOut.value = array[2];
+     G.coneOut.value.setHex( array[2] );
+
+     G.tmp_coneIn.value = array[3];
+     G.coneIn.value.setHex( array[3] );
+
+     G.tmp_skullOut.value = array[4];
+     G.skullOut.value.setHex( array[4] );
+
+     G.tmp_skullIn.value = array[5];
+     G.skullIn.value.setHex( array[5] );
+
+     G.tmp_tetraIn.value = array[6];
+     G.tetraIn.value.setHex( array[6] );
+
+     G.tmp_tetraOut.value = array[7];
+     G.tetraOut.value.setHex( array[7] );
+
+     G.tmp_bg.value = array[8];
+     G.bg.value.setHex( array[8] );
+
+     if( renderer ){
+       renderer.setClearColor( array[8] , 1 );
+     }
+
+
+
+
+
+   }
+
+   var currentScheme = 0;
+   function nextScheme(){
+
+     currentScheme ++;
+     currentScheme %= colorSchemes.length;
+
+     assignColors( colorSchemes[ currentScheme ] );
+
+
+
+
+   }
+
+
+
+
+  colorSchemes = [
+    [
+     0xF2B66D ,
+     0xB0844F ,
+     0x059372 ,
+     0x7ec7a0 ,
+     0xBF533B ,
+     0xA84934 ,
+     0x8fdcfc ,
+     0x0381c5 ,
+     0x000000
+    ],
+       [
+      0xf0c45b,
+      0x594239,
+      0xF27457,
+      0xf0c45b,
+      0x77A6A6,
+      0x594239,
+      0x594239,
+      0xF25244,
+      0x26150F
+
+    ],
+    [
+      0xFF6138,
+      0xFFFF9D,
+      0xBEEB9F,
+      0x9cf2b8,
+      0x00A388,
+      0xFF6138,
+      0xFFFF9D,
+      0xBEEB9F,
+      0x79BD8F,
+      0x00A388
+    ],
+    [
+      0x105B63,
+      0xFFFAD5,
+      0xFFD34E,
+      0xffe6bb,
+      0xBD4932,
+      0x105B63,
+      0xFFFAD5,
+      0xFFD34E,
+      0xDB9E36,
+      0xBD4932
+      ],
+
+    [
+      0x2E0927,
+      0xD90000,
+      0x04756F,
+      0xFF2D00,
+      0xFF8C00,
+      0x04756F,
+      0xFF8C00,
+      0xD90000,
+      0x2E0927,
+     
+      ],
+    [
+    0x334D5C,
+    0x45B29D,
+    0xEFC94C,
+    0xE27A3F,
+    0xDF5A49,
+    0x334D5C,
+    0x45B29D,
+    0xEFC94C,
+    0xE27A3F,
+    0xDF5A49,
+
+    ]
+  ]
+
+
+  nextScheme();
+
+  var controller = new Leap.Controller();
+  controller.connect();
+
+  /*<iframe width="100%" height="450" scrolling="no" frameborder="no" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/131626452&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;visual=true"></iframe>*/
+
+  /* <iframe width="100%" height="450" scrolling="no" frameborder="no" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/137231351&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;visual=true"></iframe>
+  
+  <iframe width="100%" height="450" scrolling="no" frameborder="no" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/175757777&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;visual=true"></iframe>
+  
+  <iframe width="100%" height="450" scrolling="no" frameborder="no" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/167068862&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;visual=true"></iframe>
+
+  <iframe width="100%" height="450" scrolling="no" frameborder="no" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/45179757&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;visual=true"></iframe>
+  
+  
+  */
+
+    var audio = new Audio(),
+  // `stream_url` you'd get from 
+  // requesting http://api.soundcloud.com/tracks/6981096.json
+  url = 'http://api.soundcloud.com/tracks/45179757/stream' +
+        '?client_id=2400df97862fa2c06f486af524e4f974';
+
+  audio.src = url;
+
+  var source = audioController.ctx.createMediaElementSource(audio);
+  source.connect(audioController.gain);
+
+  console.log( source );
+  
+
+
+  var loader  = new THREE.OBJLoader();
+  loader.load( 'models/logo.obj' , function( obj ){
+
+    coral = obj.children[0].geometry;
+    //andersGeo.computeFaceNormals();
+    //andersGeo.computeVertexNormals();
+    console.log('geo done');
+    onLoad();
+
+  });
+
+ 
+
+  var mossNormal = THREE.ImageUtils.loadTexture( 'img/normals/moss_normal_map.jpg' )  
+  mossNormal.wrapS = THREE.RepeatWrapping; 
+  mossNormal.wrapT = THREE.RepeatWrapping; 
+
+  var cragNormal = THREE.ImageUtils.loadTexture( 'img/normals/7723-normal.jpg' );
+  cragNormal.wrapS = THREE.RepeatWrapping; 
+  cragNormal.wrapT = THREE.RepeatWrapping; 
+
+
+  var snowNormal = THREE.ImageUtils.loadTexture( 'img/normals/ice-snow.jpg' );
+  snowNormal.wrapS = THREE.RepeatWrapping; 
+  snowNormal.wrapT = THREE.RepeatWrapping;
+
+  var timer = { type:"f" , value:0 }
+  var dT = { type:"f" , value:0 }
+
+
+  var shaders = new ShaderLoader('shaders');
+
+  shaders.load( 'fs-cross' , 'cross' , 'fragment' );
+  shaders.load( 'vs-cross' , 'cross' , 'vertex' );
+  shaders.load( 'fs-box' , 'box' , 'fragment' );
+  shaders.load( 'vs-box' , 'box' , 'vertex' );
+  
+  shaders.load( 'fs-skull' , 'skull' , 'fragment' );
+  shaders.load( 'vs-skull' , 'skull' , 'vertex' );
+  
+  shaders.load( 'fs-cone' , 'cone' , 'fragment' );
+  shaders.load( 'vs-cone' , 'cone' , 'vertex' );
+
+  shaders.shaderSetLoaded = function(){
+   onLoad();
+  }
+
+
+  
+  function init(){
+
+
+    
+    
+    // Getting the container in the right location
+    container     = document.createElement( 'div' );
+    container.id  = 'container';
+    
+    document.body.appendChild( container );
+
+    // Getting the stats in the right position
+    stats = new Stats();
+    stats.domElement.id = 'stats';
+    //document.body.appendChild( stats.domElement );
+
+
+    // Setting up our Renderer
+    renderer = new THREE.WebGLRenderer({
+      antialias:true 
+    });
+    renderer.setClearColor( G.tmp_bg.value, 1 );
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    container.appendChild( renderer.domElement );
+
+    scene = new THREE.Scene();
+    
+    camera = new THREE.PerspectiveCamera( 
+      70 ,
+      window.innerWidth / window.innerHeight,
+      1 / 10 ,
+      4000
+    );
+
+    // placing our camera position so it can see everything
+   // camera.position.z = 50;
+    camera.position.set( -575 , -46 , 351.1085905952933 );
+
+     camera.position.set( -1046, 401, -221.);
+    camera.velocity = new THREE.Vector3();
+
+    fallback = new THREE.TrackballControls( camera , renderer.domElement );
+    fallback.maxDistance = 2000; 
+    fallback.minDistance = 500; 
+    controls = new THREE.LeapTrackballControls( camera , controller , fallback );
+
+    controls.zoom = 1000;
+    controls.maxZoom = 2000;
+    controls.minZoom = 500;
+    controls.zoomDampening = .95;
+    controls.zoomMultiplier = 10;
+    controls.rotationSpeed = 3;
+    controls.rotationDampening = .95;
+
+ 
+    // Making sure our renderer is always the right size
+    window.addEventListener( 'resize', onWindowResize , false );
+    window.addEventListener( 'keydown', onKeyDown , false );
+
+
+    mover = new THREE.Object3D();
+
+    scene.add( mover );
+    
+   
+    vertexShader   = shaders.vertexShaders.cross;
+    fragmentShader = shaders.fragmentShaders.cross;
+
+    material = new THREE.ShaderMaterial({
+
+      uniforms: G,
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
+      side:THREE.DoubleSide,
+     // depthWrite: false,
+    // transparent: true,
+     //blending: THREE.AdditiveBlending
+
+    });
+
+    var m = new THREE.MeshNormalMaterial({
+     shading: THREE.SmoothShading 
+   });
+
+   var geo = new THREE.TetrahedronGeometry( 20, 0 );
+   geo.computeVertexNormals();
+   //var geo = new THREE.IcosahedronGeometry( 1 ,  2 );
+  // var geo = new THREE.CubeGeometry( 10 ,  10 , 10);
+
+  var geometry = new THREE.Geometry();
+
+    var geo =  new THREE.BoxGeometry( 20 , 20 , 20 , 2 , 2 , 2 );
+ var modifier = new THREE.SubdivisionModifier( 1 );
+ modifier.modify( geo );
+
+  meshes = [];
+  for( var i = 0; i < 512; i++ ){
+
+    var m = new THREE.Mesh( geo , material );
+    m.velocity = new THREE.Vector3();
+
+    var r = 200;
+    var t = Math.random() * 2 * Math.PI;
+
+    var x = Math.cos( t ) * (r + Math.random() * 50)
+    var y = Math.sin( t ) * (r + Math.random() * 50)
+    m.position.x = x ;
+    m.position.y = (Math.random()-.5) *500 +100;
+    m.position.z = y;
+    
+    m.rotation.x = Math.random() * 2 * Math.PI;
+    m.rotation.y = Math.random() * 2 * Math.PI;
+    m.rotation.z = Math.random() * 2 * Math.PI;
+
+   /* var s = Math.random() * ( (i + 100) / 100 );
+
+    m.scale.x = s;
+    m.scale.y = s;
+    m.scale.z = s;*/
+   // m.updateMatrix();
+
+   mover.add( m );
+   // geometry.merge( geo , m.matrix ) 
+    mesh = m;
+
+    meshes.push( m );
+  }
+
+
+
+  boxMat = new THREE.ShaderMaterial({
+
+
+    uniforms:G,
+    vertexShader: shaders.vs.box,
+    fragmentShader: shaders.fs.box,
+    side: THREE.DoubleSide,
+    transparent: true
+
+  });
+
+  var geo =  new THREE.IcosahedronGeometry( 100 ,0 );
+
+  var geo =  new THREE.BoxGeometry( 150 , 150 , 150 , 2 , 2 , 2 );
+ var modifier = new THREE.SubdivisionModifier( 2 );
+    modifier.modify( geo );
+
+  box = new THREE.Mesh(
+    geo,
+    boxMat 
+  );
+  mover.add( box );
+
+  box.position.y = 50;
+
+  coneMat = new THREE.ShaderMaterial({
+
+
+    uniforms:G,
+    vertexShader: shaders.vs.cone,
+    fragmentShader: shaders.fs.cone,
+    side: THREE.DoubleSide,
+    transparent: true
+
+  });
+
+  var geo =  new THREE.CylinderGeometry( 400 , 200 , 150 , 50 , 2 , true);
+// var modifier = new THREE.SubdivisionModifier( 3 );
+  //  modifier.modify( geo );
+
+   cone = new THREE.Mesh(
+    geo,
+    coneMat 
+    );
+
+  cone.position.y = -150;
+
+  mover.add( cone );
+   
+
+
+  skullMat = new THREE.ShaderMaterial({
+
+
+    uniforms:G,
+    vertexShader: shaders.vs.skull,
+    fragmentShader: shaders.fs.skull,
+    side: THREE.DoubleSide,
+    transparent: true
+
+  });
+
+
+  //var geometry = new THREE.Geom
+
+
+  var m = new THREE.Mesh( new THREE.CylinderGeometry( 0 , 200 , 200 , 50 ,2 , true)  , skullMat );
+
+ // m.scale.multiplyScalar( 100.6 );
+  m.position.y = -200;
+  //m.scale.z = 100.
+ // m.position.z = -150;
+ // m.position.x = -15;
+  //  m.rotation.x = -Math.PI / 2;
+    mover.add( m );
+
+    skull =m;
+    //geo.computeFaceNormals();
+   // geometry.computeVertexNormals();
+   /* var modifier = new THREE.SubdivisionModifier( 1 );
+    modifier.modify( geo );*/
+
+   // assignUVs( geo );
+   // mesh = new THREE.Mesh( geometry , material );// material );
+  /* mesh = new THREE.Mesh( geo , new THREE.MeshBasicMaterial({
+      map: THREE.ImageUtils.loadTexture( 'img/paper.jpg' )
+    }));// material );
+*/
+    //mesh.scale.multiplyScalar( 20.5 );
+
+   /* mesh.position.x = 0;
+    mesh.position.y = 0;
+    mover.add( mesh );*/
+
+  
+    gem = mesh;
+
+    var gHolder = document.createElement('div');
+
+    var tHolder = document.createElement('h1');
+
+    tHolder.innerHTML ='COLOR';
+    tHolder.style.background = 'black';
+    gHolder.appendChild( tHolder );
+    var guis = document.getElementById( 'GUI' );
+
+    guis.appendChild( gHolder );
+
+  /*  $(tHolder).click(function(){
+      this.toggle();
+      if( this.active ){
+        this.tHolder.className = "active";
+      }else{
+        this.tHolder.className = "";
+      }
+    }.bind( gem ));*/
+
+
+    $(tHolder).hover(function(){
+      this.gui.gui.open();
+    }.bind( gem ));
+
+    $(gHolder).hover(function(){},function(){
+      this.gui.gui.close();
+    }.bind(gem));
+
+    gem.tHolder = tHolder;
+
+    gem.gui = new GUI( G , {
+     domElement: gHolder 
+    });
+
+    //console.log( source );
+    
+    if( source.mediaElement ){
+      source.mediaElement.play();
+    }else{
+
+      audio.play();
+
+    }
+
+    camera.position.set( 
+      385.1791848900996,
+      448.95662259266834, 
+      -325.71949426983144
+    );
+     camera.position.set( -1046, 401, -221.);
+
+    camera.up.set( 0,1,1);
+  }
+
+
+  function animate(){
+
+    audioController.update();
+
+    G.dT.value = clock.getDelta();
+    G.time.value += G.dT.value;
+
+    var norm = camera.position.clone().normalize();
+    norm.multiplyScalar( Math.PI * 2 );
+   
+   // crownMat.uniforms.texScale.value = .1 * Math.sin( norm.x ) * Math.cos( norm.y );
+   // crownMat.uniforms.normalScale.value = 1. + Math.sin( norm.z )
+
+    stats.update();
+
+    controls.update();
+    renderer.render( scene , camera );
+
+    requestAnimationFrame( animate );
+
+    for( var i = 0; i < meshes.length; i++ ){
+
+      var a = audioController.analyzer.array[i]
+      meshes[i].velocity.y += .001;
+      meshes[i].position.add( meshes[i].velocity.clone().multiplyScalar( (.5 + .1 *a*a/256) ) );
+      if( meshes[i].position.y >= 350 ){
+
+        meshes[i].position.y = -150;
+        meshes[i].velocity.y = 0;
+
+      }
+
+
+
+      var y =Math.abs(( meshes[i].position.y - 400) / 500);
+      var s =  (.5 + 2 *(a*a)/65536)*y;
+      meshes[i].scale.set( s, s, s);
+      
+      
+      
+      meshes[i].rotation.x += .0001 *(100+ a);
+      meshes[i].rotation.y += .000133 *(100+ a);
+      meshes[i].rotation.z += .000145 *(100+ a);
+
+    }
+
+    var p = camera.position.clone();
+    p.normalize();
+
+    box.rotation.x = Math.abs( Math.cos( p.x )*3 );
+    box.rotation.y = Math.abs( Math.cos( p.y )*3 );
+    box.rotation.z = Math.abs( Math.cos( p.z )*3 );
+
+  }
+
+  // Resets the renderer to be the proper size
+  function onWindowResize(){
+
+    G.resolution.value.set( window.innerWidth , window.innerHeight );
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+  }
+
+  function onKeyDown( e ){
+
+    console.log( e );
+
+    if( e.keyCode == 32 ){
+
+      nextScheme();
+
+    }
+  }
+
+  function onLoad(){
+
+
+    loaded ++;
+
+    if( loaded === neededToLoad ){
+
+      init();
+      animate();
+      //stream.play();
+
+    }
+
+  }
+
+
+ 
+</script>
+
+
+</body>
+</html>
