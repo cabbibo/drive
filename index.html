@@ -77,34 +77,33 @@
       padding:10px;
     }
     #share{
-      position: absolute;
+      cursor: hand;
+      //position: absolute;
+      position: fixed;
       z-index: 99;
-      bottom: 0px;
-      left:70px;
       font-size: 25px;
-      padding: 10px;
+
+      bottom: 0px;
+     /* left:70px;
+      font-size: 25px;
+      padding: 10px;*/
+       left: 50%;
+    -webkit-transform: translate(-50%, -30%);
+    transform: translate(-50%, -30%);
     }
 
 
     #tweet{
 
-      position: absolute;
-      z-index: 999;
-      bottom: 10px;
-      left: 10px;
-      font-size: 25px;
-      padding: 40px;
-
-      width:50px;
-      height:50px;
-      display: block;
-
-      background: none;
+      position:absolute;
+      z-index:999;
+      right:20px;
+      bottom: 20px;
       opacity:.6;
-      padding:5px;
 
     }
      #tweet:hover{
+
 
       opacity: 1;
 
@@ -112,11 +111,25 @@
 
     #tweet img{
 
-      width: 50px;
-      height: 50px;
+width: 50px;
+height: 50px;
+
 
     }
 
+    #nextColor{
+
+
+z-index: 999;
+font-size: 53.5px;
+opacity: .6;
+text-decoration: underline;
+
+    }
+
+    #nextColor:hover{
+      opacity:1
+    }
   </style>
 </head>
 <body>
@@ -124,13 +137,12 @@
 
 
   <div id="share">
-  
+
+    <a id="nextColor" onclick="nextScheme()">Change Colors</a><br/> 
     <a href="https://soundcloud.com/lukeabbottmusic/luke-abbott-modern-driveway" target="_blank"> Modern Driveway - Luke Abbott </a><br/>
-    Press Space to Change Colors <br/>   
 
   </div>
-
-  <a id="tweet" href="http://twitter.com/share?text=%23threejs%20%23webgl%20space%20speaker%20powered%20by%20@lukeabbottmusic%20(%20code:%20@cabbibo%20):%20&url=http://cabbibo.com/drive" target="_blank"><img src="tweet.png"/> </a><br/>
+    <a id="tweet" href="http://twitter.com/share?text=%23threejs%20%23webgl%20space%20speaker%20powered%20by%20@lukeabbottmusic%20(%20code:%20@cabbibo%20):%20&url=http://cabbi.bo/drive" target="_blank"><img src="tweet.png"/><br/>
 
   <div id="GUI"></div>
 <script src = "lib/underscore.js"             ></script>
